@@ -25,7 +25,7 @@ npm run preview
 
 ## Адрес приложения
 
-По умолчанию кнопки ведут на `https://simple-table.ru`, регистрация — на `/registration`. При необходимости скопируйте `.env.example` в `.env` и измените `PUBLIC_APP_URL`, затем пересоберите сайт:
+Кнопки «Начать работу» ведут на `/app` текущего домена. Ссылка «Открыть SimpleTable» в подвале по умолчанию ведёт на `https://simple-table.ru`. Чтобы изменить её адрес, скопируйте `.env.example` в `.env` и измените `PUBLIC_APP_URL`, затем пересоберите сайт:
 
 ```dotenv
 PUBLIC_APP_URL=https://your-app.example
