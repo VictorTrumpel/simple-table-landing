@@ -28,6 +28,9 @@ const columns = [
 ] as const;
 const columnName = (field: CellField) => columns.find(column => column.field === field)!.name;
 const cellId = ({ rowId, field }: Cell) => `demo-cell-${rowId}-${field}`;
+// Demo data lives only until reload; page-local IDs also work over plain HTTP.
+let nextDemoId = 0;
+const createDemoId = () => `demo-${++nextDemoId}`;
 
 function CellEditor({ row, field, onCommit, onCancel }: {
   row: Entry;
@@ -115,7 +118,8 @@ function DemoParticipants() {
       return;
     }
     const role = new FormData(form).get('role') as ParticipantRole;
-    setParticipants(current => [...current, { id: crypto.randomUUID(), email, role }]);
+    const participant: Participant = { id: createDemoId(), email, role };
+    setParticipants(current => [...current, participant]);
     setNotification(`${email} добавлен в пример. Роль: ${participantRoles.find(item => item.value === role)!.label}.`);
     addDialog.current?.close();
   }
@@ -206,8 +210,9 @@ export default function TableDemo() {
   function updateCell(row: Entry, field: CellField, next: string, restoreFocus: boolean) {
     finishEditing({ rowId: row.id, field }, restoreFocus);
     if (row[field] === next) return;
+    const change: Change = { id: createDemoId(), rowId: row.id, field, before: row[field], after: next, author: 'Вы · demo@example.com', time: 'Только что', task: field === 'task' ? next : row.task };
     setRows(current => current.map(item => item.id === row.id ? { ...item, [field]: next } : item));
-    setChanges(current => [{ id: crypto.randomUUID(), rowId: row.id, field, before: row[field], after: next, author: 'Вы · demo@example.com', time: 'Только что', task: field === 'task' ? next : row.task }, ...current]);
+    setChanges(current => [change, ...current]);
     setShowHistory(true);
     setNotification(`Ячейка «${columnName(field)}» заявки «${row.task || 'Без названия'}» изменена: ${next || 'пусто'}. Изменение появилось в истории.`);
   }
@@ -229,9 +234,10 @@ export default function TableDemo() {
     const data = new FormData(event.currentTarget);
     const task = String(data.get('task') || '').trim();
     if (!task) return;
-    const row: Entry = { id: crypto.randomUUID(), task, person: String(data.get('person') || '').trim(), status: 'Новая', date: '31.10.2026', amount: '0' };
+    const row: Entry = { id: createDemoId(), task, person: String(data.get('person') || '').trim(), status: 'Новая', date: '31.10.2026', amount: '0' };
+    const change: Change = { id: createDemoId(), rowId: row.id, field: 'status', before: '', after: 'Новая', author: 'Вы · demo@example.com', time: 'Только что', task, added: true };
     setRows(current => [...current, row]);
-    setChanges(current => [{ id: crypto.randomUUID(), rowId: row.id, field: 'status', before: '', after: 'Новая', author: 'Вы · demo@example.com', time: 'Только что', task, added: true }, ...current]);
+    setChanges(current => [change, ...current]);
     setSelectedCell({ rowId: row.id, field: 'status' });
     setShowHistory(true);
     setNotification(`Заявка «${task}» добавлена в пример.`);
